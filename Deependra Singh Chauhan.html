@@ -1,0 +1,886 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Deependra Singh Chauhan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Deependra Singh Chauhan, PhD candidate in Chemical Engineering at IIT Roorkee, works on direct numerical simulation of bubbles and surfactant-laden interfaces.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=STIX+Two+Text:ital,wght@0,500;0,600;1,500&display=swap">
+<style>
+/* Layout: one reading column (max ~68rem) under a slim top bar; split hero (text | bubble figure) that stacks on phones;
+   sections divided by hairlines, dates and parameters set in mono. Colour comes from ParaView's cool-to-warm map. */
+:root {
+  --bg: #f5f6f9;
+  --surface: #ffffff;
+  --ink: #161a2a;
+  --muted: #555c6f;
+  --line: #dce0ea;
+  --accent: #3b4cc0;
+  --accent-ink: #ffffff;
+  --ok: #1d7448;
+  --amber: #8a5a00;
+  --cmap-cool: #3b4cc0;
+  --cmap-mid: #dddddd;
+  --cmap-warm: #b40426;
+  --stream: #a7aec4;
+  --gas: #eef1fb;
+
+  --font-display: "STIX Two Text", "STIX Two", Georgia, "Times New Roman", serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  --step--1: 0.8125rem;
+  --step-0: 1rem;
+  --step-1: 1.2rem;
+  --step-2: clamp(1.6rem, 1.25rem + 1.3vw, 2.1rem);
+  --step-3: clamp(2.4rem, 1.5rem + 4vw, 4rem);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1120;
+    --surface: #151a2c;
+    --ink: #e6e8f1;
+    --muted: #a0a7ba;
+    --line: #272d44;
+    --accent: #8f9dff;
+    --accent-ink: #0e1120;
+    --ok: #5ccf96;
+    --amber: #e3b45a;
+    --cmap-cool: #7083f3;
+    --cmap-mid: #c9cbd3;
+    --cmap-warm: #e2494f;
+    --stream: #3b4568;
+    --gas: #1b2140;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1120;
+  --surface: #151a2c;
+  --ink: #e6e8f1;
+  --muted: #a0a7ba;
+  --line: #272d44;
+  --accent: #8f9dff;
+  --accent-ink: #0e1120;
+  --ok: #5ccf96;
+  --amber: #e3b45a;
+  --cmap-cool: #7083f3;
+  --cmap-mid: #c9cbd3;
+  --cmap-warm: #e2494f;
+  --stream: #3b4568;
+  --gas: #1b2140;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 var(--step-0)/1.65 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-underline-offset: 0.18em; text-decoration-thickness: 1px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+h1, h2, h3 { text-wrap: balance; }
+p { margin: 0; }
+
+.page {
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.inner { max-width: 68rem; margin-inline: auto; }
+
+/* Top bar */
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  padding-block: 1.1rem;
+  border-bottom: 1px solid var(--line);
+}
+.brand {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+}
+.top nav { display: flex; flex-wrap: wrap; gap: 0.35rem 1.1rem; }
+.top nav a {
+  font: 500 var(--step--1)/1.4 var(--font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-decoration: none;
+}
+.top nav a:hover { color: var(--ink); }
+
+/* Hero */
+.hero {
+  display: grid;
+  gap: 2.5rem;
+  align-items: center;
+  padding-block: 3rem 3.5rem;
+}
+@media (min-width: 860px) {
+  .hero { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 3.5rem; padding-block: 4.5rem 4.5rem; }
+}
+.hero-text { display: grid; gap: 1.25rem; min-width: 0; }
+.eyebrow {
+  font: 500 var(--step--1)/1.5 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+h1 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--step-3);
+  line-height: 1.04;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.lead { font-size: var(--step-1); line-height: 1.55; max-width: 34rem; }
+.avail { color: var(--muted); max-width: 34rem; }
+.avail strong { color: var(--ink); font-weight: 600; }
+
+/* Contact list (hero and contact section) */
+.reach { margin: 0; display: grid; gap: 0.7rem; padding-top: 0.25rem; }
+@media (min-width: 640px) { .reach { gap: 0.5rem; } }
+.reach-row { display: grid; grid-template-columns: minmax(0, 1fr); align-items: baseline; gap: 0.15rem; }
+@media (min-width: 640px) { .reach-row { grid-template-columns: 7.4rem minmax(0, 1fr); gap: 0.75rem; } }
+.reach dt {
+  font: 500 0.75rem/1.4 var(--font-mono);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.reach dd { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.35rem 0.75rem; min-width: 0; }
+.mono {
+  font: 500 0.95rem/1.4 var(--font-mono);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.copy {
+  font: 500 0.8rem/1 var(--font-body);
+  padding: 0.38rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--accent);
+  cursor: pointer;
+}
+.copy:hover { border-color: var(--accent); }
+
+/* Hero figure */
+.hero-fig {
+  margin: 0;
+  justify-self: center;
+  width: 100%;
+  max-width: 26rem;
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+#bubble { display: block; width: 100%; max-width: 100%; aspect-ratio: 1 / 1; }
+.colorbar { display: grid; gap: 0.35rem; }
+.colorbar-title { font: 500 0.75rem/1.3 var(--font-mono); letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+.colorbar-bar {
+  height: 8px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--cmap-cool), var(--cmap-mid), var(--cmap-warm));
+}
+.colorbar-ticks { display: flex; justify-content: space-between; font: 400 0.75rem/1 var(--font-mono); color: var(--muted); }
+.hero-fig figcaption { font-size: 0.85rem; line-height: 1.5; color: var(--muted); }
+
+/* Sections */
+.block { padding-block: 3rem; border-top: 1px solid var(--line); }
+.block > h2 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--step-2);
+  line-height: 1.15;
+  margin: 0 0 0.5rem;
+}
+.block > .intro { color: var(--muted); max-width: 40rem; margin-bottom: 1.75rem; }
+
+/* Research */
+.projects { display: grid; }
+.proj {
+  display: grid;
+  gap: 0.75rem 2.5rem;
+  padding-block: 1.6rem;
+  border-top: 1px solid var(--line);
+}
+.proj:first-child { border-top: 0; padding-top: 0.25rem; }
+@media (min-width: 860px) {
+  .proj { grid-template-columns: minmax(0, 19rem) minmax(0, 1fr); }
+}
+.proj-head { display: grid; gap: 0.5rem; align-content: start; min-width: 0; }
+.proj h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.3rem;
+  line-height: 1.25;
+  margin: 0;
+}
+.meta { font-size: 0.9rem; color: var(--muted); }
+.proj-body { display: grid; gap: 0.75rem; min-width: 0; }
+.proj-body p { max-width: 65ch; }
+.params {
+  font: 400 0.85rem/1.6 var(--font-mono);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.pill {
+  justify-self: start;
+  font: 500 0.7rem/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.38rem 0.6rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.pill.pub { color: var(--accent); }
+.pill.acc { color: var(--ok); }
+.pill.prog { color: var(--amber); }
+.pill.plan { color: var(--muted); border-style: dashed; }
+.pill.done { color: var(--muted); }
+
+/* Publications */
+.pubs { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.25rem; counter-reset: pub; }
+.pubs li {
+  counter-increment: pub;
+  display: grid;
+  grid-template-columns: 2.6rem minmax(0, 1fr);
+  gap: 0.25rem;
+}
+.pubs li::before {
+  content: "[" counter(pub) "]";
+  font: 500 0.9rem/1.65 var(--font-mono);
+  color: var(--muted);
+}
+.pubs .cite { max-width: 70ch; }
+.pubs .ptitle { font-style: italic; }
+.pubs .status { color: var(--ok); font-weight: 500; }
+
+/* Timelines (experience, updates, education) */
+.tl { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.6rem; }
+.tl-item { display: grid; gap: 0.2rem 2rem; }
+@media (min-width: 640px) {
+  .tl-item { grid-template-columns: 10.5rem minmax(0, 1fr); }
+}
+.when {
+  font: 500 0.85rem/1.65 var(--font-mono);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.what { display: grid; gap: 0.35rem; min-width: 0; }
+.role { font-weight: 600; }
+.org { color: var(--muted); }
+.grade { font: 500 0.85rem/1.6 var(--font-mono); color: var(--ink); font-variant-numeric: tabular-nums; }
+.what ul { margin: 0.35rem 0 0; padding-left: 1.1rem; display: grid; gap: 0.3rem; max-width: 68ch; }
+.what li::marker { color: var(--muted); }
+.next-tag {
+  display: inline-block;
+  margin-left: 0.5rem;
+  font: 500 0.68rem/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  border: 1px dashed currentColor;
+  border-radius: 999px;
+  padding: 0.3rem 0.5rem;
+  vertical-align: 0.1em;
+}
+
+/* Skills */
+.skills { margin: 0; display: grid; gap: 1.1rem; }
+.skills div { display: grid; gap: 0.2rem 2rem; }
+@media (min-width: 640px) { .skills div { grid-template-columns: 10.5rem minmax(0, 1fr); } }
+.skills dt { font: 500 0.85rem/1.65 var(--font-mono); color: var(--muted); }
+.skills dd { margin: 0; max-width: 68ch; }
+
+/* Two-column pair for education + recognition */
+.pair { display: grid; gap: 3rem; }
+@media (min-width: 860px) { .pair { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); } }
+.pair h2 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--step-2);
+  line-height: 1.15;
+  margin: 0 0 1.5rem;
+}
+.edu .tl-item { grid-template-columns: none; }
+@media (min-width: 640px) { .edu .tl-item { grid-template-columns: 7.5rem minmax(0, 1fr); } }
+
+/* Contact */
+.contact { display: grid; gap: 1.25rem; }
+.reach.big { gap: 0.85rem; }
+.reach.big .mono { font-size: clamp(1rem, 0.9rem + 0.8vw, 1.3rem); }
+.reach .addr { max-width: 40ch; }
+footer {
+  border-top: 1px solid var(--line);
+  padding-block: 1.5rem 2.5rem;
+  font-size: var(--step--1);
+  color: var(--muted);
+}
+</style>
+
+<div class="page">
+  <div class="inner">
+    <header class="top">
+      <a class="brand" href="#about">D. S. Chauhan</a>
+      <nav aria-label="Sections">
+        <a href="#research">Research</a>
+        <a href="#publications">Publications</a>
+        <a href="#experience">Experience</a>
+        <a href="#updates">Updates</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" id="about">
+        <div class="hero-text">
+          <p class="eyebrow">PhD candidate · Chemical Engineering · IIT Roorkee</p>
+          <h1>Deependra Singh Chauhan</h1>
+          <p class="lead">I study how surfactants change the way bubbles move. With interface-resolved simulations, I follow where surfactant gathers on a bubble, how the Marangoni stress it creates slows the bubble down, and how to capture that in simple scaling laws.</p>
+          <p class="avail"><strong>Thesis submission before February 2027.</strong> Open to postdoctoral, research and CFD engineering roles from then.</p>
+          <dl class="reach">
+            <div class="reach-row">
+              <dt>Email</dt>
+              <dd><span class="mono" id="email-hero">deependra_c@ch.iitr.ac.in</span><button class="copy" type="button" id="copy-email-hero" data-copy="deependra_c@ch.iitr.ac.in" data-target="email-hero">Copy</button></dd>
+            </div>
+            <div class="reach-row">
+              <dt>Personal email</dt>
+              <dd><span class="mono" id="pemail-hero">deepumax52@gmail.com</span><button class="copy" type="button" id="copy-pemail-hero" data-copy="deepumax52@gmail.com" data-target="pemail-hero">Copy</button></dd>
+            </div>
+            <div class="reach-row">
+              <dt>Phone</dt>
+              <dd><span class="mono" id="phone-hero">+91 74154 52090</span><button class="copy" type="button" id="copy-phone-hero" data-copy="+917415452090" data-target="phone-hero">Copy</button></dd>
+            </div>
+            <div class="reach-row">
+              <dt>LinkedIn</dt>
+              <dd><a href="https://www.linkedin.com/in/deependra-singh-chauhan-62090411a" target="_blank" rel="noopener">deependra-singh-chauhan ↗</a></dd>
+            </div>
+          </dl>
+        </div>
+
+        <figure class="hero-fig">
+          <canvas id="bubble" role="img" aria-label="Animated schematic: liquid flows past a rising bubble and sweeps surfactant to the bubble's rear, where it collects."></canvas>
+          <div class="colorbar" aria-hidden="true">
+            <span class="colorbar-title">Surfactant on the interface</span>
+            <div class="colorbar-bar"></div>
+            <div class="colorbar-ticks"><span>low</span><span>high</span></div>
+          </div>
+          <figcaption>Schematic in the bubble's own frame. Streamlines show the liquid flowing past the bubble, symmetric about its axis; the colour on the interface shows surfactant swept to the rear, where it builds up into a stagnant cap.</figcaption>
+        </figure>
+      </section>
+
+      <section class="block" id="research">
+        <h2>Research</h2>
+        <p class="intro">Direct numerical simulation of bubbles with surfactant-laden interfaces, mostly in Basilisk (C), checked against experiments and theory at every step.</p>
+
+        <div class="projects">
+          <article class="proj">
+            <div class="proj-head">
+              <span class="pill pub">Published</span>
+              <h3>Marangoni boundary layers on surfactant-laden bubbles</h3>
+              <p class="meta">Physics of Fluids 38, 102108 (2026)</p>
+            </div>
+            <div class="proj-body">
+              <p>Axisymmetric simulations of rising bubbles carrying insoluble surfactant, using a coupled volume-of-fluid and phase-field method with adaptive mesh refinement. From a large parametric campaign I derived a scaling law for the thickness of the Marangoni boundary layer, which matches the simulations to about 7% r.m.s., and backed it with domain-size sensitivity tests.</p>
+              <p class="params">Bo 0.5–10 · Ga 5–140 · Ma 0–15 · Pe<sub>s</sub> = 100</p>
+              <p><a href="https://doi.org/10.1063/5.0349830" target="_blank" rel="noopener">Read the paper ↗</a></p>
+            </div>
+          </article>
+
+          <article class="proj">
+            <div class="proj-head">
+              <span class="pill acc">Accepted</span>
+              <h3>Tension-raising solutes on a rising bubble</h3>
+              <p class="meta">FMFP 2026, NIT Rourkela · 10–12 December 2026</p>
+            </div>
+            <div class="proj-body">
+              <p>Most surfactants lower surface tension, but some solutes raise it. I compared the two cases with direct numerical simulation and looked at how each one changes the wake, the velocity along the interface and the bubble's terminal rise velocity.</p>
+              <p class="params">Ga 100 · Bo 0.5 · sweep in Ma</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="block" id="publications">
+        <h2>Publications</h2>
+        <ol class="pubs">
+          <li>
+            <p class="cite"><strong>D. S. Chauhan</strong> and P. K. Farsoiya, <span class="ptitle">“Investigation of effect on boundary layer due to insoluble surfactants on rising bubbles,”</span> Physics of Fluids <strong>38</strong>, 102108 (2026). <a href="https://doi.org/10.1063/5.0349830" target="_blank" rel="noopener">doi:10.1063/5.0349830</a></p>
+          </li>
+          <li>
+            <p class="cite"><strong>D. S. Chauhan</strong> and P. K. Farsoiya, <span class="ptitle">“Numerical investigation of a negatively active solute on a bubble rising in liquid,”</span> 13th International and 53rd National Conference on Fluid Mechanics and Fluid Power (FMFP 2026), NIT Rourkela, December 2026. <span class="status">Accepted.</span></p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="block" id="experience">
+        <h2>Experience</h2>
+        <ol class="tl">
+          <li class="tl-item">
+            <span class="when">Jul 2022 – now</span>
+            <div class="what">
+              <span class="role">PhD researcher, Department of Chemical Engineering</span>
+              <span class="org">IIT Roorkee · Supervisor: Dr. Palas Kumar Farsoiya</span>
+              <ul>
+                <li>Ran direct numerical simulation campaigns of surfactant-laden rising bubbles in Basilisk (C) and turned them into an engineering scaling law.</li>
+                <li>Diagnosed solver crashes and conservation errors: floating-point faults at embedded walls, pressure-solver stalls, and bubble tracking across periodic boundaries.</li>
+                <li>Automated post-processing of long simulation runs with Python and ParaView.</li>
+              </ul>
+            </div>
+          </li>
+          <li class="tl-item">
+            <span class="when">2024 – 25</span>
+            <div class="what">
+              <span class="role">Teaching assistant, “AI/ML of CFD”</span>
+              <span class="org">IIT Roorkee</span>
+            </div>
+          </li>
+          <li class="tl-item">
+            <span class="when">Jun 2021 – May 2022</span>
+            <div class="what">
+              <span class="role">M.Tech thesis researcher</span>
+              <span class="org">IIT Ropar · Supervisor: Dr. Vishwajeet Mehandia</span>
+              <ul>
+                <li>Hele-Shaw experiments and a COMSOL model of radial viscous fingering in Newtonian and non-Newtonian fluids.</li>
+              </ul>
+            </div>
+          </li>
+          <li class="tl-item">
+            <span class="when">Jul – Dec 2021</span>
+            <div class="what">
+              <span class="role">Teaching assistant</span>
+              <span class="org">Department of Chemical Engineering, IIT Ropar</span>
+            </div>
+          </li>
+          <li class="tl-item">
+            <span class="when">Jun – Jul 2016</span>
+            <div class="what">
+              <span class="role">Process engineering intern</span>
+              <span class="org">National Fertilizers Ltd, Vijaipur (Guna)</span>
+              <ul>
+                <li>Urea plant operations: steam reforming, nitrogen separation and ammonia synthesis.</li>
+              </ul>
+            </div>
+          </li>
+        </ol>
+      </section>
+
+      <section class="block" id="updates">
+        <h2>Updates</h2>
+        <ol class="tl">
+          <li class="tl-item">
+            <span class="when">Feb 2027</span>
+            <div class="what"><span>PhD thesis submission, IIT Roorkee.<span class="next-tag">Upcoming</span></span></div>
+          </li>
+          <li class="tl-item">
+            <span class="when">Dec 2026</span>
+            <div class="what"><span>Presenting at FMFP 2026, NIT Rourkela (10–12 December).<span class="next-tag">Upcoming</span></span></div>
+          </li>
+          <li class="tl-item">
+            <span class="when">Oct 2026</span>
+            <div class="what"><span>Paper published in <em>Physics of Fluids</em> (vol. 38, article 102108).</span></div>
+          </li>
+          <li class="tl-item">
+            <span class="when">Oct 2026</span>
+            <div class="what"><span>FMFP 2026 paper on tension-raising solutes accepted for presentation.</span></div>
+          </li>        </ol>
+      </section>
+
+      <section class="block" id="skills">
+        <h2>Skills</h2>
+        <dl class="skills">
+          <div><dt>Simulation</dt><dd>Basilisk (C), ANSYS Fluent, OpenFOAM, COMSOL Multiphysics</dd></div>
+          <div><dt>Methods</dt><dd>Volume-of-fluid and phase-field interfaces, adaptive mesh refinement, embedded boundaries, surfactant and Marangoni transport, linear stability analysis</dd></div>
+          <div><dt>Programming</dt><dd>C, Python (NumPy, SciPy, Matplotlib), MATLAB, C++</dd></div>
+          <div><dt>Verification</dt><dd>Mesh and domain-independence studies, conservation checks, validation against experiments and theory</dd></div>
+          <div><dt>Tools</dt><dd>ParaView, LaTeX, Linux and WSL</dd></div>
+          <div><dt>Training</dt><dd>Summer School on Hydrodynamic Instabilities: Theory and Practices, IIT Kanpur</dd></div>
+        </dl>
+      </section>
+
+      <section class="block">
+        <div class="pair">
+          <div class="edu" id="education">
+            <h2>Education</h2>
+            <ol class="tl">
+              <li class="tl-item">
+                <span class="when">2022 – now</span>
+                <div class="what"><span class="role">PhD, Chemical Engineering</span><span class="org">Indian Institute of Technology Roorkee</span></div>
+              </li>
+              <li class="tl-item">
+                <span class="when">2020 – 22</span>
+                <div class="what"><span class="role">M.Tech, Chemical Engineering</span><span class="org">Indian Institute of Technology Ropar</span><span class="grade">CGPA 7.5 / 10</span></div>
+              </li>
+              <li class="tl-item">
+                <span class="when">2013 – 17</span>
+                <div class="what"><span class="role">B.E., Petrochemical Engineering</span><span class="org">Samrat Ashok Technological Institute, Vidisha</span><span class="grade">CGPA 6.56 / 10</span></div>
+              </li>
+            </ol>
+          </div>
+          <div id="recognition">
+            <h2>Recognition</h2>
+            <div class="what"><span class="role">GATE 2020, Chemical Engineering</span><span class="org">All India Rank 1498</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="block" id="contact">
+        <h2>Contact</h2>
+        <div class="contact">
+          <p class="intro">For research collaborations, postdoctoral positions or CFD roles, email or call me. My CV is available on request.</p>
+          <dl class="reach big">
+            <div class="reach-row">
+              <dt>Email</dt>
+              <dd><span class="mono" id="email-contact">deependra_c@ch.iitr.ac.in</span><button class="copy" type="button" id="copy-email-contact" data-copy="deependra_c@ch.iitr.ac.in" data-target="email-contact">Copy</button></dd>
+            </div>
+            <div class="reach-row">
+              <dt>Personal email</dt>
+              <dd><span class="mono" id="pemail-contact">deepumax52@gmail.com</span><button class="copy" type="button" id="copy-pemail-contact" data-copy="deepumax52@gmail.com" data-target="pemail-contact">Copy</button></dd>
+            </div>
+            <div class="reach-row">
+              <dt>Phone</dt>
+              <dd><span class="mono" id="phone-contact">+91 74154 52090</span><button class="copy" type="button" id="copy-phone-contact" data-copy="+917415452090" data-target="phone-contact">Copy</button></dd>
+            </div>
+            <div class="reach-row">
+              <dt>LinkedIn</dt>
+              <dd><a href="https://www.linkedin.com/in/deependra-singh-chauhan-62090411a" target="_blank" rel="noopener">linkedin.com/in/deependra-singh-chauhan-62090411a ↗</a></dd>
+            </div>
+            <div class="reach-row">
+              <dt>Address</dt>
+              <dd><span class="addr">Department of Chemical Engineering, Indian Institute of Technology Roorkee, Roorkee, Uttarakhand 247667, India</span></dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Deependra Singh Chauhan · Department of Chemical Engineering, IIT Roorkee · Last updated October 2026</p>
+    </footer>
+  </div>
+</div>
+
+<script>
+/* Copy-email buttons */
+(function () {
+  document.querySelectorAll('[data-copy]').forEach(function (btn) {
+    var label = btn.textContent;
+    btn.addEventListener('click', function () {
+      var text = btn.getAttribute('data-copy');
+      var target = document.getElementById(btn.getAttribute('data-target'));
+      function selectFallback() {
+        if (!target) return;
+        var range = document.createRange();
+        range.selectNodeContents(target);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        btn.textContent = 'Selected, now copy';
+      }
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function () {
+            btn.textContent = 'Copied';
+          }, selectFallback);
+        } else {
+          selectFallback();
+        }
+      } catch (e) {
+        selectFallback();
+      }
+      setTimeout(function () { btn.textContent = label; }, 2200);
+    });
+  });
+})();
+
+/* Rising-bubble schematic: potential flow past the bubble in its own frame,
+   with surfactant swept to the rear (stagnant cap). Colours come from the theme tokens. */
+(function () {
+  var canvas = document.getElementById('bubble');
+  if (!canvas || !canvas.getContext) return;
+  var ctx = canvas.getContext('2d');
+  var reduceMQ = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+  var darkMQ = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  var reduced = !!(reduceMQ && reduceMQ.matches);
+
+  var W = 0, H = 0, dpr = 1, a = 0, U = 0;
+  var colors = {};
+  var staticLayer = document.createElement('canvas');
+  var sctx = staticLayer.getContext('2d');
+  var particles = [];
+  var raf = 0, last = 0, onScreen = true;
+
+  function hexToRgb(h) {
+    h = (h || '#000000').trim().replace('#', '');
+    if (h.length === 3) h = h.split('').map(function (c) { return c + c; }).join('');
+    var n = parseInt(h, 16);
+    if (isNaN(n)) return [0, 0, 0];
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  function readColors() {
+    var cs = getComputedStyle(document.documentElement);
+    function g(n) { return cs.getPropertyValue(n).trim(); }
+    colors = {
+      ink: hexToRgb(g('--ink')),
+      muted: g('--muted'),
+      stream: g('--stream'),
+      gas: g('--gas'),
+      cool: hexToRgb(g('--cmap-cool')),
+      mid: hexToRgb(g('--cmap-mid')),
+      warm: hexToRgb(g('--cmap-warm'))
+    };
+  }
+  function cmap(t) {
+    var c0, c1, s;
+    if (t < 0.5) { c0 = colors.cool; c1 = colors.mid; s = t / 0.5; }
+    else { c0 = colors.mid; c1 = colors.warm; s = (t - 0.5) / 0.5; }
+    return 'rgb(' + c0.map(function (v, i) { return Math.round(v + (c1[i] - v) * s); }).join(',') + ')';
+  }
+  function smoothstep(e0, e1, x) {
+    var t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)));
+    return t * t * (3 - 2 * t);
+  }
+  /* Potential flow past a sphere of radius a (the bubble is axisymmetric), drawn in the meridional plane.
+     Free stream U points down the screen (+y); x is the signed distance from the axis. */
+  function vel(x, y) {
+    var R2 = x * x + y * y;
+    if (R2 < 1e-9) return [0, 0];
+    var R = Math.sqrt(R2), R3 = R2 * R, R5 = R3 * R2, a3 = a * a * a;
+    return [-1.5 * U * a3 * x * y / R5, U * (1 - a3 / R3 + 1.5 * a3 * x * x / R5)];
+  }
+  /* Distance from the axis, at height y, of the streamline that is a distance c from the axis far upstream.
+     Stokes stream function: psi = U rho^2 (1 - a^3/R^3) / 2, so solve rho^2 (1 - a^3/R^3) = c^2 by bisection
+     (the left side grows monotonically with rho outside the sphere). */
+  function rhoOf(c, y) {
+    var lo = Math.abs(y) < a ? Math.sqrt(a * a - y * y) : 0;
+    var hi = c + a, a3 = a * a * a;
+    for (var k = 0; k < 48; k++) {
+      var mid = 0.5 * (lo + hi);
+      var R = Math.sqrt(mid * mid + y * y);
+      if (mid * mid * (1 - a3 / (R * R * R)) > c * c) hi = mid; else lo = mid;
+    }
+    return 0.5 * (lo + hi);
+  }
+
+  function buildStatic() {
+    staticLayer.width = canvas.width;
+    staticLayer.height = canvas.height;
+    sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    sctx.clearRect(0, 0, W, H);
+    sctx.save();
+    sctx.translate(W / 2, H / 2);
+    sctx.strokeStyle = colors.stream;
+    sctx.lineWidth = 1;
+    /* seven streamlines on each side, evenly spaced far upstream, computed once and mirrored */
+    var perSide = 7, spacing = W / 15;
+    for (var k = 1; k <= perSide; k++) {
+      var c = k * spacing, pts = [];
+      for (var y = -H / 2 - 2; y <= H / 2 + 2; y += 1) pts.push([rhoOf(c, y), y]);
+      for (var side = -1; side <= 1; side += 2) {
+        sctx.beginPath();
+        sctx.moveTo(side * pts[0][0], pts[0][1]);
+        for (var j = 1; j < pts.length; j++) sctx.lineTo(side * pts[j][0], pts[j][1]);
+        sctx.stroke();
+      }
+    }
+    sctx.restore();
+  }
+
+  /* Tracers live on the right half only and are drawn twice (x and -x), so the motion is mirror-symmetric too. */
+  function spawn(p, anywhere) {
+    var x0 = a * 0.3; /* keep tracers off the axis so no line forms down the centre */
+    p.x = x0 + Math.random() * (W / 2 - x0);
+    p.y = anywhere ? (Math.random() - 0.5) * H : -H / 2 - Math.random() * H * 0.25;
+    if (Math.hypot(p.x, p.y) < a * 1.1) { p.y = -H / 2 - Math.random() * 20; }
+    p.hist = [];
+    return p;
+  }
+  function seedParticles() {
+    var count = Math.max(22, Math.min(55, Math.round(W * H / 3600)));
+    particles = [];
+    for (var i = 0; i < count; i++) particles.push(spawn({}, true));
+  }
+
+  function drawBubble() {
+    ctx.save();
+    ctx.translate(W / 2, H / 2);
+    /* gas */
+    ctx.fillStyle = colors.gas;
+    ctx.beginPath();
+    ctx.arc(0, 0, a, 0, Math.PI * 2);
+    ctx.fill();
+    /* interface coloured by surfactant concentration: low at the front (top), high in the rear cap */
+    var seg = 160;
+    ctx.lineWidth = Math.max(4, a * 0.075);
+    ctx.lineCap = 'butt';
+    for (var i = 0; i < seg; i++) {
+      var t0 = (i / seg) * Math.PI * 2, t1 = ((i + 1.05) / seg) * Math.PI * 2;
+      var tm = (t0 + t1) / 2;
+      var ym = Math.sin(tm);
+      var phi = Math.acos(Math.max(-1, Math.min(1, -ym))); /* 0 at the front stagnation point, pi at the rear */
+      var gamma = 0.04 + 0.96 * smoothstep(0.45 * Math.PI, 0.96 * Math.PI, phi);
+      ctx.strokeStyle = cmap(gamma);
+      ctx.beginPath();
+      ctx.arc(0, 0, a, t0, t1);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  /* Copy the right half onto the left half, mirrored, so the picture is exactly symmetric about the axis. */
+  function mirrorRightHalf() {
+    var Wd = canvas.width, Hd = canvas.height, half = Wd / 2;
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, half, Hd);
+    ctx.setTransform(-1, 0, 0, 1, Wd, 0);
+    ctx.drawImage(canvas, half, 0, half, Hd, half, 0, half, Hd);
+    ctx.restore();
+  }
+
+  function drawLabel() {
+    ctx.save();
+    ctx.fillStyle = colors.muted;
+    ctx.strokeStyle = colors.muted;
+    ctx.lineWidth = 1.25;
+    var fs = Math.max(10, Math.round(W * 0.03));
+    ctx.font = '500 ' + fs + 'px "IBM Plex Mono", ui-monospace, monospace';
+    ctx.textBaseline = 'top';
+    var lx = Math.round(W * 0.04), ly = Math.round(H * 0.04);
+    ctx.fillText('oncoming liquid', lx + fs * 1.2, ly);
+    ctx.beginPath();
+    ctx.moveTo(lx + fs * 0.4, ly);
+    ctx.lineTo(lx + fs * 0.4, ly + fs * 1.6);
+    ctx.moveTo(lx, ly + fs * 1.1);
+    ctx.lineTo(lx + fs * 0.4, ly + fs * 1.6);
+    ctx.lineTo(lx + fs * 0.8, ly + fs * 1.1);
+    ctx.stroke();
+    ctx.fillText('(bubble frame)', lx + fs * 1.2, ly + fs * 1.3);
+    ctx.restore();
+  }
+
+  function drawParticles() {
+    ctx.save();
+    ctx.translate(W / 2, H / 2);
+    var ink = colors.ink;
+    ctx.lineWidth = 1.4;
+    ctx.lineCap = 'round';
+    for (var i = 0; i < particles.length; i++) {
+      var h = particles[i].hist;
+      for (var k = 1; k < h.length; k++) {
+        var alpha = (k / h.length) * 0.55;
+        ctx.strokeStyle = 'rgba(' + ink[0] + ',' + ink[1] + ',' + ink[2] + ',' + alpha.toFixed(3) + ')';
+        ctx.beginPath();
+        ctx.moveTo(h[k - 1][0], h[k - 1][1]);
+        ctx.lineTo(h[k][0], h[k][1]);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  function step(dt) {
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      var v1 = vel(p.x, p.y);
+      var mx = p.x + 0.5 * dt * v1[0], my = p.y + 0.5 * dt * v1[1];
+      var v2 = vel(mx, my);
+      p.x += dt * v2[0];
+      p.y += dt * v2[1];
+      if (p.x < 0) p.x = -p.x;
+      p.hist.push([p.x, p.y]);
+      if (p.hist.length > 16) p.hist.shift();
+      if (p.y > H / 2 + 8 || Math.hypot(p.x, p.y) < a * 1.02) spawn(p, false);
+    }
+  }
+
+  function render() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(staticLayer, 0, 0);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (!reduced) drawParticles();
+    drawBubble();
+    mirrorRightHalf();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drawLabel();
+  }
+
+  function frame(ts) {
+    raf = 0;
+    var dt = last ? Math.min(0.05, (ts - last) / 1000) : 0.016;
+    last = ts;
+    step(dt);
+    render();
+    schedule();
+  }
+  function schedule() {
+    if (reduced || !onScreen || document.hidden) { last = 0; return; }
+    if (!raf) raf = requestAnimationFrame(frame);
+  }
+
+  function resize() {
+    var rect = canvas.getBoundingClientRect();
+    var w = Math.max(2, 2 * Math.round(rect.width / 2));
+    if (w === W && canvas.width) return;
+    var want = Math.min(2, window.devicePixelRatio || 1);
+    W = w; H = w;
+    /* even bitmap width keeps the axis on a pixel boundary, so the mirror is exact */
+    canvas.width = Math.max(2, 2 * Math.round(W * want / 2));
+    canvas.height = canvas.width;
+    dpr = canvas.width / W;
+    a = W * 0.2;
+    U = H / 5.5;
+    buildStatic();
+    seedParticles();
+    if (!reduced) { for (var i = 0; i < 90; i++) step(0.03); }
+    render();
+    schedule();
+  }
+
+  function refreshTheme() {
+    readColors();
+    buildStatic();
+    render();
+  }
+
+  readColors();
+  if (window.ResizeObserver) { new ResizeObserver(function () { W = 0; resize(); }).observe(canvas); }
+  else { window.addEventListener('resize', function () { W = 0; resize(); }); }
+  resize();
+
+  if (window.IntersectionObserver) {
+    new IntersectionObserver(function (entries) {
+      onScreen = entries[0].isIntersecting;
+      schedule();
+    }).observe(canvas);
+  }
+  document.addEventListener('visibilitychange', schedule);
+  if (darkMQ && darkMQ.addEventListener) darkMQ.addEventListener('change', refreshTheme);
+  if (reduceMQ && reduceMQ.addEventListener) reduceMQ.addEventListener('change', function (e) { reduced = e.matches; render(); schedule(); });
+  new MutationObserver(refreshTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(render);
+})();
+</script>
+
+</body></html>
